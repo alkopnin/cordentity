@@ -1,6 +1,15 @@
+repositories {
+    flatDir {
+        dirs '../lib'
+    }
+}
+
 dependencies {
     compile group: 'org.hyperledger', name: 'indy', version: "$indy_version"
-    compile group: 'com.evernym', name: 'vcx', 'version': "$vcx_version"
+    
+    //compile group: 'com.evernym', name: 'vcx', 'version': "$vcx_version"
+    compile name: 'com.evernym-vcx-0.2.0'
+    
     compile 'net.sourceforge.streamsupport:android-retrofuture:1.7.0'
 
     compile "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
