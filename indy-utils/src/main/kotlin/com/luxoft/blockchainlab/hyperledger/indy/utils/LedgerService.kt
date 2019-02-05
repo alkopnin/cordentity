@@ -106,8 +106,8 @@ class LedgerService(private val did: String, private val wallet: Wallet, private
     companion object {
         val logger = LoggerFactory.getLogger(IndyUser::class.java.name)!!
 
-        private val delayMs = 2000L
-        private val retryTimes = 5
+        private val delayMs = 500L
+        private val retryTimes = 10
 
         /**
          * Adds NYM record to ledger. E.g. "I trust this person"
