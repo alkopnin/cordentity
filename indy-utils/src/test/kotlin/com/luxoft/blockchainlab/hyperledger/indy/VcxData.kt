@@ -7,7 +7,7 @@ data class VcxProvisionConfig(
         val agencyUrl: String = "http://10.255.255.21:8080",
         val agencyDid: String = "VsKV7grR1BUE29mG2Fm2kX",
         val agencyVerkey: String = "Hezce2UWMZ3wUhVkh2LfKSs8nDzWwzs2Win7EzNN3YaR",
-        val walletName: String = "wallet-${Random().nextInt()}",
+        val walletName: String = "wallet-${Random().nextInt().shr(1)}",
         val walletKey: String = "123",
         val paymentMethod: String = "null",
         val enterpriseSeed: String = "000000000000000000000000Trustee1"
