@@ -29,9 +29,9 @@ class AgentConnectionTest {
         }
 
         val agent94 = AgentConnection("ws://172.17.0.1:8094/ws", invite = inviteMsg.invite).apply {
-            sendProof(Proof(emptyList(), "1"))
-            sendProof(Proof(emptyList(), "2"))
-            sendProof(Proof(emptyList(), "3"))
+            sendTypedMessage(Proof(emptyList(), "1"))
+            sendTypedMessage(Proof(emptyList(), "2"))
+            sendTypedMessage(Proof(emptyList(), "3"))
             agent94completed.complete(Unit)
         }
         agent95.run {
