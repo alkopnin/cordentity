@@ -2,6 +2,7 @@ package com.luxoft.blockchainlab.corda.hyperledger.indy
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.google.gson.annotations.SerializedName
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.Companion.CONNECT
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.Companion.GENERATE_INVITE
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.Companion.GET_MESSAGES
@@ -96,27 +97,27 @@ class AgentConnection(val myAgentUrl: String, val invite: String? = null, val us
         }
     }
 
-    data class WalletConnect(val name: String, val passphrase: String, val `@type`: String = CONNECT)
-    data class ReceiveInviteMessage(val invite: String, val label: String = "", val `@type`: String = RECEIVE_INVITE)
-    data class InviteReceivedMessage(val key: String, val label: String, val endpoint: String, val `@type`: String)
+    data class WalletConnect(val name: String, val passphrase: String, @SerializedName("@type") val type: String = CONNECT)
+    data class ReceiveInviteMessage(val invite: String, val label: String = "", @SerializedName("@type") val type: String = RECEIVE_INVITE)
+    data class InviteReceivedMessage(val key: String, val label: String, val endpoint: String, @SerializedName("@type") val type: String)
 
-    data class SendRequestMessage(val key: String, val `@type`: String = SEND_REQUEST)
-    data class RequestReceivedMessage(val label: String, val did: String, val endpoint: String, val `@type`: String)
-    data class RequestSendResponseMessage(val did: String, val `@type`: String = SEND_RESPONSE)
-    data class RequestResponseReceivedMessage(val their_did: String, val history: JsonObject, val `@type`: String)
+    data class SendRequestMessage(val key: String, @SerializedName("@type") val type: String = SEND_REQUEST)
+    data class RequestReceivedMessage(val label: String, val did: String, val endpoint: String, @SerializedName("@type") val type: String)
+    data class RequestSendResponseMessage(val did: String, @SerializedName("@type") val type: String = SEND_RESPONSE)
+    data class RequestResponseReceivedMessage(val their_did: String, val history: JsonObject, @SerializedName("@type") val type: String)
 
-    data class SendMessage(val to: String? = null, val message: TypedBodyMessage? = null, val `@type`: String = SEND_MESSAGE)
+    data class SendMessage(val to: String? = null, val message: TypedBodyMessage? = null, @SerializedName("@type") val type: String = SEND_MESSAGE)
     data class MessageReceivedMessage(val from: String, val timestamp: Number, val content: TypedBodyMessage)
-    data class MessageReceived(val id: String, val with: String?, val message: MessageReceivedMessage, val `@type`: String = SEND_MESSAGE)
-    data class LoadMessage(val with: String, val `@type`: String = GET_MESSAGES)
-    data class TypedBodyMessage(val message: Any, val `@class`: String, val correlationId: String = UUID.randomUUID().toString())
+    data class MessageReceived(val id: String, val with: String?, val message: MessageReceivedMessage, @SerializedName("@type") val type: String = SEND_MESSAGE)
+    data class LoadMessage(val with: String, @SerializedName("@type") val type: String = GET_MESSAGES)
+    data class TypedBodyMessage(val message: Any, @SerializedName("@class") val clazz: String, val correlationId: String = UUID.randomUUID().toString())
 
     fun sendJson(obj: Any) = webSocket.sendJson(obj)
 
     fun WebSocketClient.sendJson(obj: Any) = send(gson.toJson(obj))
 
     fun genInvite(): ReceiveInviteMessage {
-        webSocket.sendJson(AgentConnection.SendMessage(`@type` = GENERATE_INVITE))
+        webSocket.sendJson(AgentConnection.SendMessage(type = GENERATE_INVITE))
         return waitForMessageOfType<AgentConnection.ReceiveInviteMessage>(INVITE_GENERATED)
     }
 
@@ -164,7 +165,7 @@ class AgentConnection(val myAgentUrl: String, val invite: String? = null, val us
             val message = webSocket.receivedMessages.filter {
                 gson.fromJson(it, JsonObject::class.java).get("@type").asString
                         ?.contentEquals(MESSAGE_RECEIVED) ?: false
-            }.find { gson.fromJson(it, MessageReceived::class.java).message.content.`@class` == T::class.java.canonicalName }
+            }.find { gson.fromJson(it, MessageReceived::class.java).message.content.clazz == T::class.java.canonicalName }
             if (message != null) {
                 val result = gson.fromJson(gson.toJsonTree(gson.fromJson(message, MessageReceived::class.java).message.content.message), T::class.java)
                 webSocket.receivedMessages.remove(message)
