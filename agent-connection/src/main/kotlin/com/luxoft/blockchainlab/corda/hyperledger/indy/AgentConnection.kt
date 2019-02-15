@@ -41,8 +41,8 @@ interface Connection {
     fun sendProofRequest(request: ProofRequest)
     fun receiveProofRequest(): ProofRequest
 
-    fun sendProof(proof: Proof)
-    fun receiveProof(): Proof
+    fun sendProof(proof: ProofInfo)
+    fun receiveProof(): ProofInfo
 }
 
 class AgentConnection(val myAgentUrl: String, val invite: String? = null, val userName: String = "user1", val passphrase: String = "test") : Connection {
@@ -204,9 +204,9 @@ class AgentConnection(val myAgentUrl: String, val invite: String? = null, val us
 
     override fun receiveProofRequest(): ProofRequest = waitForTypedMessage()
 
-    override fun sendProof(proof: Proof) = sendTypedMessage(proof)
+    override fun sendProof(proof: ProofInfo) = sendTypedMessage(proof)
 
-    override fun receiveProof(): Proof = waitForTypedMessage()
+    override fun receiveProof(): ProofInfo = waitForTypedMessage()
 }
 
 class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
