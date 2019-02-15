@@ -47,7 +47,6 @@ class CordentitySerializationWhitelist : SerializationWhitelist {
             RevocationRegistryDefinitionId::class.java,
             CredentialDefinitionId::class.java,
             SchemaId::class.java,
-            Connection::class.java,
             AgentConnection::class.java,
             IndyParty::class.java,
             AgentConnection.WalletConnect::class.java,
