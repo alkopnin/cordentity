@@ -15,28 +15,28 @@ import java.util.*
 
 
 @CordaService
-class ConnectionService(serviceHub: AppServiceHub) : SingletonSerializeAsToken(), Connection {
-    override fun getCounterParty() = connection!!.getCounterParty()
+class ConnectionService(serviceHub: AppServiceHub) : SingletonSerializeAsToken() {
+    fun getCounterParty() = connection!!.getCounterParty()
 
-    override fun sendCredentialOffer(offer: CredentialOffer) = connection!!.sendCredentialOffer(offer)
+    fun sendCredentialOffer(offer: CredentialOffer) = connection!!.sendCredentialOffer(offer)
 
-    override fun receiveCredentialOffer() = connection!!.receiveCredentialOffer()
+    fun receiveCredentialOffer() = connection!!.receiveCredentialOffer()
 
-    override fun sendCredentialRequest(request: CredentialRequestInfo) = connection!!.sendCredentialRequest(request)
+    fun sendCredentialRequest(request: CredentialRequestInfo) = connection!!.sendCredentialRequest(request)
 
-    override fun receiveCredentialRequest() = connection!!.receiveCredentialRequest()
+    fun receiveCredentialRequest() = connection!!.receiveCredentialRequest()
 
-    override fun sendCredential(credential: CredentialInfo) = connection!!.sendCredential(credential)
+    fun sendCredential(credential: CredentialInfo) = connection!!.sendCredential(credential)
 
-    override fun receiveCredential() = connection!!.receiveCredential()
+    fun receiveCredential() = connection!!.receiveCredential()
 
-    override fun sendProofRequest(request: ProofRequest) = connection!!.sendProofRequest(request)
+    fun sendProofRequest(request: ProofRequest) = connection!!.sendProofRequest(request)
 
-    override fun receiveProofRequest() = connection!!.receiveProofRequest()
+    fun receiveProofRequest() = connection!!.receiveProofRequest()
 
-    override fun sendProof(proof: ProofInfo) = connection!!.sendProof(proof)
+    fun sendProof(proof: ProofInfo) = connection!!.sendProof(proof)
 
-    override fun receiveProof() = connection!!.receiveProof()
+    fun receiveProof() = connection!!.receiveProof()
 
     private val connection: AgentConnection? = if (serviceHub.myInfo.legalIdentities.first().name.organisation == "TreatmentCenter")
         AgentConnection("ws://10.255.255.21:8095/ws", userName = "user${Random().nextInt()}")
