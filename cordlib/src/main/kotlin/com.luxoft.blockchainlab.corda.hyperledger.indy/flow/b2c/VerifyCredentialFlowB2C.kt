@@ -25,8 +25,7 @@ object VerifyCredentialFlowB2C {
             private val identifier: String,
             private val attributes: List<ProofAttribute>,
             private val predicates: List<ProofPredicate>,
-            private val nonRevoked: Interval? = null,
-            private val connection: Connection
+            private val nonRevoked: Interval? = null
     ) : FlowLogic<Boolean>() {
 
         @Suspendable
@@ -58,9 +57,9 @@ object VerifyCredentialFlowB2C {
                         nonRevoked = nonRevoked
                 )
 
-                connection.sendProofRequest(proofRequest)
+                connectionService().sendProofRequest(proofRequest)
 
-                val proof = connection.receiveProof()
+                val proof = connectionService().receiveProof()
 
                 val usedData = indyUser().getDataUsedInProof(proofRequest, proof)
                 val credentialProofOut =

@@ -24,8 +24,7 @@ object IssueCredentialFlowB2C {
     open class Issuer(
             private val identifier: String,
             private val credentialProposal: String,
-            private val credentialDefinitionId: CredentialDefinitionId,
-            private val connection: Connection
+            private val credentialDefinitionId: CredentialDefinitionId
     ) : FlowLogic<Unit>() {
 
         @Suspendable
@@ -49,15 +48,18 @@ object IssueCredentialFlowB2C {
                 // issue credential
                 val offer = indyUser().createCredentialOffer(credentialDefinitionId)
 
-                connection.sendCredentialOffer(offer)
+                connectionService().sendCredentialOffer(offer)
 
-                val credentialRequest = connection.receiveCredentialRequest()
+                val credentialRequest = connectionService().receiveCredentialRequest()
 
                 val credential = indyUser().issueCredential(
                         credentialRequest,
                         credentialProposal,
                         offer
                 )
+
+                connectionService().sendCredential(credential)
+
                 val credentialOut = IndyCredential(
                         identifier,
                         credentialRequest,
