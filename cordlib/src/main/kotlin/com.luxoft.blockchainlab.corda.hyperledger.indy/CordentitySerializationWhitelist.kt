@@ -1,9 +1,7 @@
 package com.luxoft.blockchainlab.corda.hyperledger.indy
 
-import com.google.gson.Gson
 import com.luxoft.blockchainlab.hyperledger.indy.*
 import net.corda.core.serialization.SerializationWhitelist
-import org.java_websocket.client.WebSocketClient
 
 
 class CordentitySerializationWhitelist : SerializationWhitelist {
