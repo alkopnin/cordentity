@@ -1,7 +1,9 @@
 package com.luxoft.blockchainlab.corda.hyperledger.indy
 
+import com.google.gson.Gson
 import com.luxoft.blockchainlab.hyperledger.indy.*
 import net.corda.core.serialization.SerializationWhitelist
+import org.java_websocket.client.WebSocketClient
 
 
 class CordentitySerializationWhitelist : SerializationWhitelist {
@@ -46,20 +48,6 @@ class CordentitySerializationWhitelist : SerializationWhitelist {
             IdentityDetails::class.java,
             RevocationRegistryDefinitionId::class.java,
             CredentialDefinitionId::class.java,
-            SchemaId::class.java,
-            AgentConnection::class.java,
-            IndyParty::class.java,
-            AgentConnection.WalletConnect::class.java,
-            AgentConnection.ReceiveInviteMessage::class.java,
-            AgentConnection.InviteReceivedMessage::class.java,
-            AgentConnection.SendRequestMessage::class.java,
-            AgentConnection.RequestReceivedMessage::class.java,
-            AgentConnection.RequestResponseReceivedMessage::class.java,
-            AgentConnection.RequestSendResponseMessage::class.java,
-            AgentConnection.SendMessage::class.java,
-            AgentConnection.MessageReceived::class.java,
-            AgentConnection.MessageReceivedMessage::class.java,
-            AgentConnection.LoadMessage::class.java,
-            AgentConnection.TypedBodyMessage::class.java
+            SchemaId::class.java
     )
 }
