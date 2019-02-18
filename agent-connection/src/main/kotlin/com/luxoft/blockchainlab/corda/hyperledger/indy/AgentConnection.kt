@@ -190,7 +190,7 @@ class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
     }
 
     fun sendTypedMessage(message: TypedBodyMessage, counterParty: IndyParty) = sendJson(SendMessage(counterParty.did, message))
-    inline fun <reified T : Any> sendTypedMessage(message: T, counterParty: IndyParty) = sendTypedMessage(TypedBodyMessage(message, T::class.java.canonicalName), counterParty)
+    inline fun <reified T : Any> sendTypedMessage(message: T, counterParty: IndyParty) = sendJson(sendTypedMessage(TypedBodyMessage(message, T::class.java.canonicalName), counterParty))
     inline fun <reified T : Any> popTypedMessage(): T? {
         synchronized(receivedMessages) {
             val message = receivedMessages.filter {
