@@ -1,8 +1,7 @@
 package com.luxoft.blockchainlab.corda.hyperledger.indy
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.google.gson.annotations.SerializedName
+
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.CONNECT
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.GENERATE_INVITE
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.GET_MESSAGES
@@ -16,6 +15,7 @@ import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_T
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.SEND_REQUEST
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.SEND_RESPONSE
 import com.luxoft.blockchainlab.hyperledger.indy.*
+import com.luxoft.blockchainlab.hyperledger.indy.utils.SerializationUtils
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Thread.sleep
@@ -23,6 +23,8 @@ import java.net.URI
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.collections.LinkedHashMap
+
 
 data class IndyParty(val did: String, val endpoint: String, val verkey: String? = null)
 
@@ -110,7 +112,6 @@ class AgentConnection(val myAgentUrl: String, val invite: String? = null, val us
 
     fun sendRequest(key: String) = webSocket.sendJson(SendRequestMessage(key))
 
-
     override fun getCounterParty(): IndyParty? {
         return counterParty
     }
@@ -137,7 +138,6 @@ class AgentConnection(val myAgentUrl: String, val invite: String? = null, val us
 
 class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
     private val log = Logger.getLogger(this::class.java.name)
-    val gson = Gson()
 
     override fun onOpen(handshakedata: ServerHandshake?) {
         log.info { "Connection opened: $handshakedata" }
@@ -159,21 +159,16 @@ class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
         log.log(Level.WARNING, "Connection error", ex)
     }
 
-    fun sendJson(obj: Any) = send(gson.toJson(obj))
+    fun sendJson(obj: Any) = send(SerializationUtils.anyToJSON(obj))
 
     fun popMessageOfType(type: String): String? {
         synchronized(receivedMessages) {
-            val result = receivedMessages.find {
-                gson.fromJson(it, JsonObject::class.java).get("@type").asString?.contentEquals(type) ?: false
-            }
+            val result = receivedMessages.find { SerializationUtils.jSONToAny<Map<String, Any>>(it)["@type"].toString().contentEquals(type) }
             if (result != null)
                 receivedMessages.remove(result)
+
             return result
         }
-    }
-
-    inline fun <reified T> popMessageOfType(type: String): T {
-        return gson.fromJson(popMessageOfType(type), T::class.java)
     }
 
     fun waitForMessageOfType(type: String): String {
@@ -185,20 +180,24 @@ class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
         return messageOfType
     }
 
-    inline fun <reified T> waitForMessageOfType(type: String): T {
-        return gson.fromJson(waitForMessageOfType(type), T::class.java)
+    inline fun <reified T : Any> waitForMessageOfType(type: String): T {
+        return SerializationUtils.jSONToAny(waitForMessageOfType(type))
     }
 
     fun sendTypedMessage(message: TypedBodyMessage, counterParty: IndyParty) = sendJson(SendMessage(counterParty.did, message))
     inline fun <reified T : Any> sendTypedMessage(message: T, counterParty: IndyParty) = sendJson(sendTypedMessage(TypedBodyMessage(message, T::class.java.canonicalName), counterParty))
     inline fun <reified T : Any> popTypedMessage(): T? {
         synchronized(receivedMessages) {
-            val message = receivedMessages.filter {
-                gson.fromJson(it, JsonObject::class.java).get("@type").asString
-                        ?.contentEquals(MESSAGE_RECEIVED) ?: false
-            }.find { gson.fromJson(it, MessageReceived::class.java).message.content.clazz == T::class.java.canonicalName }
+            val message = receivedMessages
+                    .filter { SerializationUtils.jSONToAny<Map<String, Any>>(it)["@type"].toString().contentEquals(MESSAGE_RECEIVED) }
+                    .find { SerializationUtils.jSONToAny<MessageReceived>(it).message.content.clazz == T::class.java.canonicalName }
+
             if (message != null) {
-                val result = gson.fromJson(gson.toJsonTree(gson.fromJson(message, MessageReceived::class.java).message.content.message), T::class.java)
+                val result = SerializationUtils.jSONToAny<T>(
+                        SerializationUtils.anyToJSON(
+                                SerializationUtils.jSONToAny<MessageReceived>(message).message.content.message
+                        )
+                )
                 receivedMessages.remove(message)
                 return result
             }
@@ -216,17 +215,17 @@ class AgentWebSocketClient(serverUri: URI) : WebSocketClient(serverUri) {
     }
 }
 
-data class WalletConnect(val name: String, val passphrase: String, @SerializedName("@type") val type: String = CONNECT)
-data class ReceiveInviteMessage(val invite: String, val label: String = "", @SerializedName("@type") val type: String = RECEIVE_INVITE)
-data class InviteReceivedMessage(val key: String, val label: String, val endpoint: String, @SerializedName("@type") val type: String)
+data class WalletConnect(val name: String, val passphrase: String, @JsonProperty("@type") val type: String = CONNECT)
+data class ReceiveInviteMessage(val invite: String, val label: String = "", @JsonProperty("@type") val type: String = RECEIVE_INVITE)
+data class InviteReceivedMessage(val key: String, val label: String, val endpoint: String, @JsonProperty("@type") val type: String)
 
-data class SendRequestMessage(val key: String, @SerializedName("@type") val type: String = SEND_REQUEST)
-data class RequestReceivedMessage(val label: String, val did: String, val endpoint: String, @SerializedName("@type") val type: String)
-data class RequestSendResponseMessage(val did: String, @SerializedName("@type") val type: String = SEND_RESPONSE)
-data class RequestResponseReceivedMessage(val their_did: String, val history: JsonObject, @SerializedName("@type") val type: String)
+data class SendRequestMessage(val key: String, @JsonProperty("@type") val type: String = SEND_REQUEST)
+data class RequestReceivedMessage(val label: String, val did: String, val endpoint: String, @JsonProperty("@type") val type: String)
+data class RequestSendResponseMessage(val did: String, @JsonProperty("@type") val type: String = SEND_RESPONSE)
+data class RequestResponseReceivedMessage(val their_did: String, val history: Map<String, Any>, @JsonProperty("@type") val type: String)
 
-data class SendMessage(val to: String? = null, val message: TypedBodyMessage? = null, @SerializedName("@type") val type: String = SEND_MESSAGE)
+data class SendMessage(val to: String? = null, val message: TypedBodyMessage? = null, @JsonProperty("@type") val type: String = SEND_MESSAGE)
 data class MessageReceivedMessage(val from: String, val timestamp: Number, val content: TypedBodyMessage)
-data class MessageReceived(val id: String, val with: String?, val message: MessageReceivedMessage, @SerializedName("@type") val type: String = SEND_MESSAGE)
-data class LoadMessage(val with: String, @SerializedName("@type") val type: String = GET_MESSAGES)
-data class TypedBodyMessage(val message: Any, @SerializedName("@class") val clazz: String, val correlationId: String = UUID.randomUUID().toString())
+data class MessageReceived(val id: String, val with: String?, val message: MessageReceivedMessage, @JsonProperty("@type") val type: String = SEND_MESSAGE)
+data class LoadMessage(val with: String, @JsonProperty("@type") val type: String = GET_MESSAGES)
+data class TypedBodyMessage(val message: Any, @JsonProperty("@class") val clazz: String, val correlationId: String = UUID.randomUUID().toString())
