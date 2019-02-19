@@ -419,14 +419,14 @@ data class ProofRequest(
 
 data class CredentialAttributeReference(
     override val name: String,
-    @JsonIgnore override val schemaId: String
+    override val schemaId: String
 ) : AbstractCredentialReference(name, schemaId)
 
 data class CredentialPredicateReference(
     override val name: String,
     val p_type: String,
     val p_value: Int,
-    @JsonIgnore override val schemaId: String
+    override val schemaId: String
 ) : AbstractCredentialReference(name, schemaId)
 
 abstract class AbstractCredentialReference(
