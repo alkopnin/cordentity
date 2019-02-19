@@ -24,7 +24,7 @@ object CreateCredentialDefinitionFlow {
      * */
     @InitiatingFlow
     @StartableByRPC
-    class Authority(private val schemaId: SchemaId, private val credentialsLimit: Int = 100) :
+    class Authority(private val schemaId: SchemaId, private val credentialsLimit: Int = 0) :
         FlowLogic<CredentialDefinitionId>() {
 
         @Suspendable
@@ -34,9 +34,11 @@ object CreateCredentialDefinitionFlow {
                 checkNoCredentialDefinitionOnIndy()
 
                 // create indy stuff
-                val credentialDefinitionObj = indyUser().createCredentialDefinition(schemaId, true)
+                val credentialDefinitionObj = indyUser().createCredentialDefinition(schemaId, credentialsLimit > 0)
                 val credentialDefinitionId = credentialDefinitionObj.getCredentialDefinitionId()
-                indyUser().createRevocationRegistry(credentialDefinitionId, credentialsLimit)
+
+                if (credentialsLimit > 0)
+                    indyUser().createRevocationRegistry(credentialDefinitionId, credentialsLimit)
 
                 val signers = listOf(ourIdentity.owningKey)
                 // create new credential definition state
