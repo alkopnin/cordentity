@@ -1,6 +1,7 @@
 package com.luxoft.blockchainlab.hyperledger.indy
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.hyperledger.indy.sdk.blob_storage.BlobStorageReader
 import org.hyperledger.indy.sdk.blob_storage.BlobStorageWriter
@@ -338,12 +339,12 @@ data class RequestedCredentials(
 data class RequestedAttributeInfo(
     @JsonProperty("cred_id") val credentialId: String,
     val revealed: Boolean = true,
-    val timestamp: Long?
+    @JsonInclude(JsonInclude.Include.NON_NULL) val timestamp: Long?
 )
 
 data class RequestedPredicateInfo(
     @JsonProperty("cred_id") val credentialId: String,
-    val timestamp: Long?
+    @JsonInclude(JsonInclude.Include.NON_NULL) val timestamp: Long?
 )
 
 /**
