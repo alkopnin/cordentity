@@ -2,6 +2,7 @@ package com.luxoft.blockchainlab.corda.hyperledger.indy
 
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.CONNECT
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.GENERATE_INVITE
 import com.luxoft.blockchainlab.corda.hyperledger.indy.AgentConnection.MESSAGE_TYPES.GET_MESSAGES
@@ -23,7 +24,6 @@ import java.net.URI
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
-import kotlin.collections.LinkedHashMap
 
 
 data class IndyParty(val did: String, val endpoint: String, val verkey: String? = null)
@@ -222,10 +222,10 @@ data class InviteReceivedMessage(val key: String, val label: String, val endpoin
 data class SendRequestMessage(val key: String, @JsonProperty("@type") val type: String = SEND_REQUEST)
 data class RequestReceivedMessage(val label: String, val did: String, val endpoint: String, @JsonProperty("@type") val type: String)
 data class RequestSendResponseMessage(val did: String, @JsonProperty("@type") val type: String = SEND_RESPONSE)
-data class RequestResponseReceivedMessage(val their_did: String, val history: Map<String, Any>, @JsonProperty("@type") val type: String)
+data class RequestResponseReceivedMessage(val their_did: String, val history: ObjectNode, @JsonProperty("@type") val type: String)
 
 data class SendMessage(val to: String? = null, val message: TypedBodyMessage? = null, @JsonProperty("@type") val type: String = SEND_MESSAGE)
 data class MessageReceivedMessage(val from: String, val timestamp: Number, val content: TypedBodyMessage)
-data class MessageReceived(val id: String, val with: String?, val message: MessageReceivedMessage, @JsonProperty("@type") val type: String = SEND_MESSAGE)
+data class MessageReceived(val id: String?, val with: String?, val message: MessageReceivedMessage, @JsonProperty("@type") val type: String = SEND_MESSAGE)
 data class LoadMessage(val with: String, @JsonProperty("@type") val type: String = GET_MESSAGES)
 data class TypedBodyMessage(val message: Any, @JsonProperty("@class") val clazz: String, val correlationId: String = UUID.randomUUID().toString())

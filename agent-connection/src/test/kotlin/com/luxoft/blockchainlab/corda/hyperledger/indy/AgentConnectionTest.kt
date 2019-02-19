@@ -2,12 +2,12 @@ package com.luxoft.blockchainlab.corda.hyperledger.indy
 
 import com.luxoft.blockchainlab.hyperledger.indy.CredentialOffer
 import com.luxoft.blockchainlab.hyperledger.indy.KeyCorrectnessProof
-import com.luxoft.blockchainlab.hyperledger.indy.Proof
 import org.junit.Ignore
 import org.junit.Test
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class AgentConnectionTest {
 
@@ -27,8 +27,12 @@ class AgentConnectionTest {
                 assertEquals(proof.schemaId,"1")
                 assertEquals(proof2.schemaId,"2")
                 assertEquals(proof3.schemaId,"3")
-                agent95completed.complete(Unit)
+
             }
+        }.handle { t, u ->
+            if (u != null) u.printStackTrace()
+            assertNull(u)
+            agent95completed.complete(Unit)
         }
 
         val agent94 = AgentConnection("ws://10.255.255.21:8094/ws", invite = inviteMsg.invite, userName = "user${Random().nextInt()}").apply {
