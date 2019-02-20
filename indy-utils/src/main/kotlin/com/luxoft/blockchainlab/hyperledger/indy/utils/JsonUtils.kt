@@ -16,7 +16,7 @@ object SerializationUtils {
     init {
         mapper.propertyNamingStrategy = PropertyNamingStrategy.SNAKE_CASE
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
 
     fun anyToJSON(obj: Any?): String = mapper.writeValueAsString(obj)
