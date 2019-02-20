@@ -603,7 +603,7 @@ data class ParsedProof(
 )
 
 data class ProofInfo(
-    val proofData: ParsedProof
+    @JsonProperty("proof_data") val proofData: ParsedProof
 ) {
     @JsonIgnore
     fun isAttributeExists(value: String) = proofData.requestedProof.revealedAttrs.values.any { it.raw == value }
