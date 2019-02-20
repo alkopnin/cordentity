@@ -67,11 +67,7 @@ class IndyService(services: AppServiceHub) : SingletonSerializeAsToken() {
         val genesisFile = File(config[indyuser.genesisFile])
         val pool = PoolManager.openIndyPool(genesisFile)
 
-
-        val tailsPath = if (config[indyuser.tailsFile] != null && config[indyuser.tailsFile].isNotEmpty())
-            config[indyuser.tailsFile]
-        else
-            "tails"
+        val tailsPath = "tails"
 
         indyUser = if (config.getOrNull(indyuser.role)?.compareTo("trustee", true) == 0) {
             val didConfig = DidJSONParameters.CreateAndStoreMyDidJSONParameter(
