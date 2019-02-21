@@ -4,11 +4,10 @@ import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.b2b.AssignPermission
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.b2b.CreatePairwiseFlowB2B
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.b2b.IssueCredentialFlowB2B
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.b2b.VerifyCredentialFlowB2B
+import com.luxoft.blockchainlab.corda.hyperledger.indy.service.IndyProperties
 import com.luxoft.blockchainlab.corda.hyperledger.indy.service.IndyService
-import com.luxoft.blockchainlab.hyperledger.indy.utils.PoolManager
-import com.natpryce.konfig.Configuration
-import com.natpryce.konfig.ConfigurationMap
-import com.natpryce.konfig.TestConfigurationsProvider
+import io.mockk.every
+import io.mockk.mockkObject
 import net.corda.core.concurrent.CordaFuture
 import net.corda.core.flows.FlowLogic
 import net.corda.core.identity.CordaX500Name
@@ -17,12 +16,14 @@ import net.corda.core.utilities.getOrThrow
 import net.corda.node.internal.StartedNode
 import net.corda.node.services.api.StartedNodeServices
 import net.corda.testing.common.internal.testNetworkParameters
+import net.corda.testing.node.internal.MockNodeArgs
 import net.corda.testing.core.singleIdentity
 import net.corda.testing.node.internal.InternalMockNetwork
 import net.corda.testing.node.internal.InternalMockNetwork.MockNode
 import net.corda.testing.node.internal.newContext
 import org.junit.After
 import org.junit.Before
+import java.io.File
 import java.time.Duration
 import java.util.*
 import kotlin.math.absoluteValue
@@ -52,8 +53,6 @@ open class CordaTestBase {
         private set
 
     private val parties: MutableList<StartedNode<MockNode>> = mutableListOf()
-
-    protected val random = Random()
 
     /**
      * Shares permissions from [authority] to [issuer]
@@ -115,32 +114,10 @@ open class CordaTestBase {
 
     @Before
     fun commonSetup() {
-        TestConfigurationsProvider.provider = object : TestConfigurationsProvider {
-            override fun getConfig(name: String): Configuration? {
-                // Watch carefully for these hard-coded values
-                // Now we assume that issuer(indy trustee) is the first created node from SomeNodes
-                return if (name == "Trustee") {
-                    ConfigurationMap(
-                        mapOf(
-                            "indyuser.walletName" to name,
-                            "indyuser.role" to "trustee",
-                            "indyuser.did" to "V4SGRU86Z58d6TV7PBUe6f",
-                            "indyuser.seed" to "000000000000000000000000Trustee1",
-                            "indyuser.genesisFile" to PoolManager.TEST_GENESIS_FILE_PATH
-                        )
-                    )
-                } else ConfigurationMap(
-                    mapOf(
-                        "indyuser.walletName" to name + random.nextLong().absoluteValue,
-                        "indyuser.genesisFile" to PoolManager.TEST_GENESIS_FILE_PATH
-                    )
-                )
-            }
-        }
-
         net = InternalMockNetwork(
-            cordappPackages = listOf("com.luxoft.blockchainlab.corda.hyperledger.indy"),
-            networkParameters = testNetworkParameters(maxTransactionSize = 10485760 * 5)
+                cordappPackages = listOf("com.luxoft.blockchainlab.corda.hyperledger.indy"),
+                networkParameters = testNetworkParameters(maxTransactionSize = 10485760 * 5),
+                defaultFactory = CordaTestBase::MockIndyNode
         )
     }
 
@@ -154,6 +131,34 @@ open class CordaTestBase {
             parties.clear()
         } finally {
             net.stopNodes()
+        }
+    }
+
+    open class MockIndyNode(args: MockNodeArgs) : InternalMockNetwork.MockNode(args) {
+
+        companion object {
+            val TEST_GENESIS_FILE_PATH by lazy { javaClass.classLoader.getResource("docker_pool_transactions_genesis.txt").file }
+            val TEST_GENESIS_FILE by lazy { File(TEST_GENESIS_FILE_PATH) }
+
+            private val sessionId = Random().nextLong().absoluteValue.toString()
+        }
+
+        private val organisation: String = args.config.myLegalName.organisation
+
+        override fun start(): StartedNode<MockNode> {
+
+            mockkObject(IndyProperties)
+
+            every { IndyProperties.getGenesisPath() } returns TEST_GENESIS_FILE_PATH
+            every { IndyProperties.getWalletName()  } returns organisation + sessionId
+
+            if(organisation == "Trustee") {
+                every { IndyProperties.getDid() } returns "V4SGRU86Z58d6TV7PBUe6f"
+                every { IndyProperties.getRole() } returns "trustee"
+                every { IndyProperties.getSeed() } returns "000000000000000000000000Trustee1"
+            }
+
+            return super.start()
         }
     }
 }

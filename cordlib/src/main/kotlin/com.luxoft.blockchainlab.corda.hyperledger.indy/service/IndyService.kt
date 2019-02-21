@@ -22,68 +22,58 @@ import java.io.File
  * It is planed to be extended in the future version.
  */
 @CordaService
-class IndyService(services: AppServiceHub) : SingletonSerializeAsToken() {
-
-    private val poolName = "default_pool"
-    private val credentials = """{"key": "key"}"""
-
-    private val config = TestConfigurationsProvider.config(services.myInfo.legalIdentities.first().name.organisation)
-        ?: EmptyConfiguration
-            .ifNot(
-                ConfigurationProperties.fromFileOrNull(File("indyconfig", "indy.properties")),
-                indyuser
-            ) // file with common name if you go for file-based config
-            .ifNot(
-                ConfigurationProperties.fromFileOrNull(
-                    File(
-                        "indyconfig",
-                        "${services.myInfo.legalIdentities.first().name.organisation}.indy.properties"
-                    )
-                ), indyuser
-            )  //  file with node-specific name
-            .ifNot(EnvironmentVariables(), indyuser) // Good for docker-compose, ansible-playbook or similar
-
+class IndyService(serviceHub: AppServiceHub) : SingletonSerializeAsToken() {
     private val logger = LoggerFactory.getLogger(IndyService::class.java.name)
+
+    private val credentials = """{"key": "key"}"""
 
     val indyUser: IndyUser
 
     init {
-        val walletName = try {
-            config[indyuser.walletName]
-        } catch (e: Exception) {
-            services.myInfo.legalIdentities.first().name.organisation
-        }
-        val walletConfig = SerializationUtils.anyToJSON(WalletConfig(walletName))
+        val walletConfig = SerializationUtils.anyToJSON(WalletConfig(
+                try {
+                    IndyProperties.getWalletName()
+                } catch(e: Exception) {
+                    logger.info("Wallet name is not specified in config file. Use organisation name")
+                    serviceHub.myInfo.legalIdentities.first().name.organisation
+                })
+        )
 
         try {
-
             Wallet.createWallet(walletConfig, credentials).get()
         } catch (ex: Exception) {
-            if (getRootCause(ex) !is WalletExistsException) throw ex else logger.debug("Wallet already exists")
+            logger.info("Wallet has not been created")
+
+            if (getRootCause(ex) !is WalletExistsException) {
+                logger.error(ex.message)
+                throw ex
+            }
+
+            logger.info("Wallet is already exists")
         }
 
         val wallet = Wallet.openWallet(walletConfig, credentials).get()
 
-        val genesisFile = File(config[indyuser.genesisFile])
+        val genesisFile = File(IndyProperties.getGenesisPath())
         val pool = PoolManager.openIndyPool(genesisFile)
 
-        indyUser = if (config.getOrNull(indyuser.role)?.compareTo("trustee", true) == 0) {
-            val didConfig = DidJSONParameters.CreateAndStoreMyDidJSONParameter(
-                config[indyuser.did], config[indyuser.seed], null, null
-            ).toJson()
+        val isTrustee = try {
+            (IndyProperties.getRole().compareTo("trustee", true) == 0)
+        } catch (ex: Exception) {
+            logger.info("Role has not been specified")
+            false
+        }
 
-            IndyUser(pool, wallet, config[indyuser.did], didConfig)
+        indyUser = if(isTrustee) {
+            val didConfig = DidJSONParameters.CreateAndStoreMyDidJSONParameter(
+                    IndyProperties.getDid(),
+                    IndyProperties.getSeed(),
+                    null,
+                    null
+            ).toJson()
+            IndyUser(pool, wallet, IndyProperties.getDid(), didConfig)
         } else {
             IndyUser(pool, wallet, null)
         }
-    }
-
-    @Suppress("ClassName")
-    object indyuser : PropertyGroup() {
-        val role by stringType
-        val did by stringType
-        val seed by stringType
-        val walletName by stringType
-        val genesisFile by stringType
     }
 }

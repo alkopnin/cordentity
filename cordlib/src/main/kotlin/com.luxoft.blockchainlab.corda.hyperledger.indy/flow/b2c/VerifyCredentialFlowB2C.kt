@@ -1,13 +1,13 @@
 package com.luxoft.blockchainlab.corda.hyperledger.indy.flow.b2c
 
 import co.paralleluniverse.fibers.Suspendable
-import com.luxoft.blockchainlab.corda.hyperledger.indy.Connection
 import com.luxoft.blockchainlab.corda.hyperledger.indy.contract.IndyCredentialContract
 import com.luxoft.blockchainlab.corda.hyperledger.indy.data.state.IndyCredentialProof
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.ProofAttribute
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.ProofPredicate
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.indyUser
 import com.luxoft.blockchainlab.corda.hyperledger.indy.flow.whoIsNotary
+import com.luxoft.blockchainlab.corda.hyperledger.indy.service.connectionService
 import com.luxoft.blockchainlab.hyperledger.indy.CredentialFieldReference
 import com.luxoft.blockchainlab.hyperledger.indy.CredentialPredicate
 import com.luxoft.blockchainlab.hyperledger.indy.IndyUser
