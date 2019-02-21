@@ -79,14 +79,16 @@ class IndyService(services: AppServiceHub) : SingletonSerializeAsToken() {
             IndyUser(pool, wallet, null, tailsPath = tailsPath)
         }
     }
+}
 
-    @Suppress("ClassName")
-    object indyuser : PropertyGroup() {
-        val role by stringType
-        val did by stringType
-        val seed by stringType
-        val walletName by stringType
-        val genesisFile by stringType
-        val tailsFile by stringType
-    }
+@Suppress("ClassName")
+object indyuser : PropertyGroup() {
+    val role by stringType
+    val did by stringType
+    val seed by stringType
+    val walletName by stringType
+    val genesisFile by stringType
+    val agentWSEndpoint by stringType
+    val agentUser by stringType
+    val agentPassword by stringType
 }

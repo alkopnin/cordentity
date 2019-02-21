@@ -47,7 +47,7 @@ object VerifyCredentialFlowB2C {
                             it.credentialDefinitionId.toString()
                     )
                     CredentialPredicate(fieldRef, it.value)
-                }
+                } //com.fasterxml.jackson.databind.ObjectMapper@548ccc41
 
                 val proofRequest = IndyUser.createProofRequest(
                         version = "0.1",
